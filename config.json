@@ -1,0 +1,7 @@
+{
+  "activePreset": "openai/chatgpt-4o-latest",
+  "presets": [
+    "openai/chatgpt-4o-latest",
+    "openrouter/auto"
+  ]
+}
