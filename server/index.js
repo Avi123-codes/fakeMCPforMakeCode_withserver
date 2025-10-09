@@ -153,16 +153,21 @@ async function callOpenAI(model, sys, user) {
   const j = await r.json();
   return (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content || "").trim();
 }
-async function callOpenRouter(model, sys, user) {
+async function callOpenRouter(model, sys, user, req) {
   if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY missing");
+  const headers = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+    "X-Title": "MakeCode AI"
+  };
+  // best-effort referer for OpenRouter analytics
+  try {
+    const origin = req?.headers?.origin;
+    if (origin) headers["HTTP-Referer"] = new URL(origin).origin;
+  } catch {}
   const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-      "HTTP-Referer": "https://yourapp.example",
-      "X-Title": "MakeCode AI"
-    },
+    headers,
     body: JSON.stringify({
       model: model || "openrouter/auto",
       temperature: BASE_TEMP,
@@ -176,22 +181,27 @@ async function callOpenRouter(model, sys, user) {
 }
 
 // ---------- preset router ----------
+// IMPORTANT: route the "openai/chatgpt-4o-latest" label THROUGH OpenRouter
 function resolvePreset(preset) {
   switch (preset) {
     case "openai/chatgpt-4o-latest":
-      return { provider: "openai", model: "chatgpt-4o-latest" };
+      // Use OpenRouter's OpenAI model slug (requires access on your OpenRouter acct)
+      return { provider: "openrouter", model: "openai/gpt-4o" };
+      // If you prefer cheaper/faster:
+      // return { provider: "openrouter", model: "openai/gpt-4o-mini" };
     case "openrouter/auto":
       return { provider: "openrouter", model: "openrouter/auto" };
     default:
-      throw new Error("Unknown preset: " + preset);
+      // fallback: treat unknown as openrouter/auto
+      return { provider: "openrouter", model: "openrouter/auto" };
   }
 }
 
-async function askValidatedByPreset(preset, target, request, currentCode) {
+async function askValidatedByPreset(preset, target, request, currentCode, reqForHeaders) {
   const { provider, model } = resolvePreset(preset);
   const sys = sysFor(target);
   const user = userFor(request, currentCode || "");
-  const caller = provider === "openai" ? callOpenAI : callOpenRouter;
+  const caller = provider === "openai" ? callOpenAI : (m, s, u) => callOpenRouter(m, s, u, reqForHeaders);
 
   async function oneAttempt(extraSys) {
     const finalSys = sys + (extraSys ? ("\n" + extraSys) : "");
@@ -243,7 +253,7 @@ app.post("/mcai/generate", async (req, res) => {
     if (!request || !target) return res.status(400).json({ error: "Missing request/target" });
     if (!["microbit", "arcade", "maker"].includes(target)) return res.status(400).json({ error: "Invalid target" });
 
-    const result = await askValidatedByPreset(CONFIG.activePreset, target, request, currentCode);
+    const result = await askValidatedByPreset(CONFIG.activePreset, target, request, currentCode, req);
     res.json(result);
   } catch (e) {
     res.status(500).json({ error: e && e.message ? e.message : "Server error" });
