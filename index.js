@@ -15,13 +15,12 @@ function readConfig() {
       // the UI will show->
       presets: [
         "openai/chatgpt-4o-latest",
-        "openai/gpt-5",
+        "openai/gpt-5-mini",
         "google/gemini-2.5-pro",
         "google/gemini-2.5-flash",
         "anthropic/claude-sonnet-4.5",
         "x-ai/grok-code-fast-1",
-        "qwen/qwen3-coder",
-        "deepseek/deepseek-chat-v3.1:free",
+        "qwen/qwen3-coder-30b-a3b-instruct",
         "openrouter/auto"
       ]
     };
@@ -205,17 +204,16 @@ async function callOpenRouter(model, sys, user, req) {
 }
 
 // ---------- preset router ----------
-// IMPORTANT: route the "openai/chatgpt-4o-latest" label THROUGH OpenRouter
-// All routes go through OpenRouter using a single OPENROUTER_API_KEY
+// IMPORTANT: route labels THROUGH OpenRouter (single OPENROUTER_API_KEY)
 function resolvePreset(preset) {
   switch (preset) {
     // Keep 4o-latest as default label, route to the OpenRouter slug
     case "openai/chatgpt-4o-latest":
       return { provider: "openrouter", model: "openai/gpt-4o" };
 
-    // Your requested models
-    case "openai/gpt-5":
-      return { provider: "openrouter", model: "openai/gpt-5" };
+    // Updated choices
+    case "openai/gpt-5-mini":
+      return { provider: "openrouter", model: "openai/gpt-5-mini" };
 
     case "google/gemini-2.5-pro":
       return { provider: "openrouter", model: "google/gemini-2.5-pro" };
@@ -224,16 +222,13 @@ function resolvePreset(preset) {
       return { provider: "openrouter", model: "google/gemini-2.5-flash" };
 
     case "anthropic/claude-sonnet-4.5":
-      return { provider: "openrouter", model: "anthropic/claude-3.7-sonnet" }; // If your account exposes "claude-sonnet-4.5" as a different slug, replace here.
+      return { provider: "openrouter", model: "anthropic/claude-sonnet-4.5" };
 
     case "x-ai/grok-code-fast-1":
       return { provider: "openrouter", model: "x-ai/grok-code-fast-1" };
 
-    case "qwen/qwen3-coder":
-      return { provider: "openrouter", model: "qwen/qwen-3-coder" }; // If OpenRouter uses qwen/qwen3-coder exactly, change to that.
-
-    case "deepseek/deepseek-chat-v3.1:free":
-      return { provider: "openrouter", model: "deepseek/deepseek-chat-v3.1:free" };
+    case "qwen/qwen3-coder-30b-a3b-instruct":
+      return { provider: "openrouter", model: "qwen/qwen3-coder-30b-a3b-instruct" };
 
     // Router fallback
     case "openrouter/auto":
@@ -244,7 +239,6 @@ function resolvePreset(preset) {
       return { provider: "openrouter", model: "openrouter/auto" };
   }
 }
-
 
 async function askValidatedByPreset(preset, target, request, currentCode, reqForHeaders) {
   const { provider, model } = resolvePreset(preset);
