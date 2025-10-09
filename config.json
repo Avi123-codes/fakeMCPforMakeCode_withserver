@@ -2,6 +2,15 @@
   "activePreset": "openai/chatgpt-4o-latest",
   "presets": [
     "openai/chatgpt-4o-latest",
+    "openai/gpt-4o-mini",
+    "anthropic/claude-3.5-sonnet",
+    "anthropic/claude-3.5-haiku",
+    "google/gemini-1.5-pro",
+    "google/gemini-1.5-flash",
+    "meta/llama-3.1-70b",
+    "mistral/mixtral-8x7b",
+    "qwen/qwen2.5-72b",
+    "deepseek/deepseek-chat",
     "openrouter/auto"
   ]
 }
