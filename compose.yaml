@@ -1,16 +1,19 @@
+# MakeCode Helper project
+# Maintainer: Josiah
+
 services:
-  app:
+  makecodehelper:
     build:
       context: .
-      dockerfile: Dockerfile
-    image: basic-express:latest
-    ports:
-      - "8787:8787"
+      target: runner
     environment:
-      - NODE_ENV=production
-    # For development, uncomment volume and change NODE_ENV to development:
-    # volumes:
-    #   - ./:/usr/src/app
-    #   - /usr/src/app/node_modules
-    # environment:
-    #   - NODE_ENV=development
+      VIRTUAL_PORT: 80 # tells the nginx proxy which port the app listens on
+      VIRTUAL_HOST: mcai.dev.tk.sg # external hostname for the app
+    networks:
+      - devtksg
+    expose:
+      - "80"
+
+networks:
+  devtksg:
+    external: true
