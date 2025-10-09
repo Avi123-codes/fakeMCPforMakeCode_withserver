@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Server Status Checker</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; text-align: center; margin-top: 50px; }
+    #status { font-size: 2em; margin-top: 20px; }
+    .up { color: green; }
+    .down { color: red; }
+    button { padding: 10px 20px; font-size: 1em; }
+  </style>
+</head>
+<body>
+  <h1>Server Status Checker</h1>
+  <button onclick="checkStatus()">Check Server Status</button>
+  <div id="status">Status: <span class="down">Unknown</span></div>
+  <script>
+    async function checkStatus() {
+      const statusDiv = document.getElementById('status');
+      statusDiv.innerHTML = 'Status: <span>Checking...</span>';
+      try {
+        const res = await fetch('/health');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'ok') {
+            statusDiv.innerHTML = 'Status: <span class="up">UP</span>';
+          } else {
+            statusDiv.innerHTML = 'Status: <span class="down">DOWN</span>';
+          }
+        } else {
+          statusDiv.innerHTML = 'Status: <span class="down">DOWN</span>';
+        }
+      } catch (e) {
+        statusDiv.innerHTML = 'Status: <span class="down">DOWN</span>';
+      }
+    }
+    // Optionally, check status on page load
+    checkStatus();
+  </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: basic-express:latest
+    ports:
+      - "8787:8787"
+    environment:
+      - NODE_ENV=production
+    # For development, uncomment volume and change NODE_ENV to development:
+    # volumes:
+    #   - ./:/usr/src/app
+    #   - /usr/src/app/node_modules
+    # environment:
+    #   - NODE_ENV=development
