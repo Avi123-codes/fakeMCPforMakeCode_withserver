@@ -9,12 +9,28 @@ const path = require("path");
 const CONFIG_PATH = path.join(__dirname, "config.json");
 function readConfig() {
   if (!fs.existsSync(CONFIG_PATH)) {
-    const init = { activePreset: "openai/chatgpt-4o-latest", presets: ["openai/chatgpt-4o-latest", "openrouter/auto"] };
+    const init = {
+      // default selection
+      activePreset: "openai/chatgpt-4o-latest",
+      // the UI will show->
+      presets: [
+        "openai/chatgpt-4o-latest",
+        "openai/gpt-5",
+        "google/gemini-2.5-pro",
+        "google/gemini-2.5-flash",
+        "anthropic/claude-sonnet-4.5",
+        "x-ai/grok-code-fast-1",
+        "qwen/qwen3-coder",
+        "deepseek/deepseek-chat-v3.1:free",
+        "openrouter/auto"
+      ]
+    };
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(init, null, 2));
     return init;
   }
   return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
 }
+
 function writeConfig(cfg) {
   const tmp = CONFIG_PATH + ".tmp";
   fs.writeFileSync(tmp, JSON.stringify(cfg, null, 2));
@@ -190,20 +206,45 @@ async function callOpenRouter(model, sys, user, req) {
 
 // ---------- preset router ----------
 // IMPORTANT: route the "openai/chatgpt-4o-latest" label THROUGH OpenRouter
+// All routes go through OpenRouter using a single OPENROUTER_API_KEY
 function resolvePreset(preset) {
   switch (preset) {
+    // Keep 4o-latest as default label, route to the OpenRouter slug
     case "openai/chatgpt-4o-latest":
-      // Use OpenRouter's OpenAI model slug (requires access on your OpenRouter acct)
       return { provider: "openrouter", model: "openai/gpt-4o" };
-      // If you prefer cheaper/faster:
-      // return { provider: "openrouter", model: "openai/gpt-4o-mini" };
+
+    // Your requested models
+    case "openai/gpt-5":
+      return { provider: "openrouter", model: "openai/gpt-5" };
+
+    case "google/gemini-2.5-pro":
+      return { provider: "openrouter", model: "google/gemini-2.5-pro" };
+
+    case "google/gemini-2.5-flash":
+      return { provider: "openrouter", model: "google/gemini-2.5-flash" };
+
+    case "anthropic/claude-sonnet-4.5":
+      return { provider: "openrouter", model: "anthropic/claude-3.7-sonnet" }; // If your account exposes "claude-sonnet-4.5" as a different slug, replace here.
+
+    case "x-ai/grok-code-fast-1":
+      return { provider: "openrouter", model: "x-ai/grok-code-fast-1" };
+
+    case "qwen/qwen3-coder":
+      return { provider: "openrouter", model: "qwen/qwen-3-coder" }; // If OpenRouter uses qwen/qwen3-coder exactly, change to that.
+
+    case "deepseek/deepseek-chat-v3.1:free":
+      return { provider: "openrouter", model: "deepseek/deepseek-chat-v3.1:free" };
+
+    // Router fallback
     case "openrouter/auto":
       return { provider: "openrouter", model: "openrouter/auto" };
+
     default:
-      // fallback: treat unknown as openrouter/auto
+      // Unknown label → safe fallback
       return { provider: "openrouter", model: "openrouter/auto" };
   }
 }
+
 
 async function askValidatedByPreset(preset, target, request, currentCode, reqForHeaders) {
   const { provider, model } = resolvePreset(preset);
