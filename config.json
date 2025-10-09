@@ -2,13 +2,12 @@
   "activePreset": "openai/chatgpt-4o-latest",
   "presets": [
     "openai/chatgpt-4o-latest",
-    "openai/gpt-5",
-    "google/gemini-2.5-pro",
-    "google/gemini-2.5-flash",
+    "openai/gpt-5-mini",
     "anthropic/claude-sonnet-4.5",
+    "google/gemini-2.5-flash",
+    "google/gemini-2.5-pro",
     "x-ai/grok-code-fast-1",
-    "qwen/qwen3-coder",
-    "deepseek/deepseek-chat-v3.1:free",
+    "qwen/qwen3-coder-30b-a3b-instruct",
     "openrouter/auto"
   ]
 }
