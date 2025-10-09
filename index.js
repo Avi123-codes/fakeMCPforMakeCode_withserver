@@ -9,12 +9,29 @@ const path = require("path");
 const CONFIG_PATH = path.join(__dirname, "config.json");
 function readConfig() {
   if (!fs.existsSync(CONFIG_PATH)) {
-    const init = { activePreset: "openai/chatgpt-4o-latest", presets: ["openai/chatgpt-4o-latest", "openrouter/auto"] };
+    const init = {
+      activePreset: "openai/chatgpt-4o-latest",
+      presets: [
+        // All models
+        "openai/chatgpt-4o-latest",
+        "openai/gpt-4o-mini",
+        "anthropic/claude-3.5-sonnet",
+        "anthropic/claude-3.5-haiku",
+        "google/gemini-1.5-pro",
+        "google/gemini-1.5-flash",
+        "meta/llama-3.1-70b",
+        "mistral/mixtral-8x7b",
+        "qwen/qwen2.5-72b",
+        "deepseek/deepseek-chat",
+        "openrouter/auto"
+      ]
+    };
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(init, null, 2));
     return init;
   }
   return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
 }
+
 function writeConfig(cfg) {
   const tmp = CONFIG_PATH + ".tmp";
   fs.writeFileSync(tmp, JSON.stringify(cfg, null, 2));
@@ -42,14 +59,6 @@ app.use(cors({
     return cb(new Error("CORS not allowed from origin: " + origin));
   }
 }));
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
-});
-
-app.get("/", (req, res) => {
-  res.sendFile("status.html", { root: __dirname });
-});
 
 // optional bearer auth
 app.use((req, res, next) => {
@@ -190,20 +199,45 @@ async function callOpenRouter(model, sys, user, req) {
 
 // ---------- preset router ----------
 // IMPORTANT: route the "openai/chatgpt-4o-latest" label THROUGH OpenRouter
+// All routes go through OpenRouter using a single OPENROUTER_API_KEY
 function resolvePreset(preset) {
   switch (preset) {
+    //All models go through OpenRouter
     case "openai/chatgpt-4o-latest":
-      // Use OpenRouter's OpenAI model slug (requires access on your OpenRouter acct)
       return { provider: "openrouter", model: "openai/gpt-4o" };
-      // If you prefer cheaper/faster:
-      // return { provider: "openrouter", model: "openai/gpt-4o-mini" };
+    case "openai/gpt-4o-mini":
+      return { provider: "openrouter", model: "openai/gpt-4o-mini" };
+  
+    case "anthropic/claude-3.5-sonnet":
+      return { provider: "openrouter", model: "anthropic/claude-3.5-sonnet" };
+    case "anthropic/claude-3.5-haiku":
+      return { provider: "openrouter", model: "anthropic/claude-3.5-haiku" };
+
+    case "google/gemini-1.5-pro":
+      return { provider: "openrouter", model: "google/gemini-1.5-pro" };
+    case "google/gemini-1.5-flash":
+      return { provider: "openrouter", model: "google/gemini-1.5-flash" };
+
+    
+    case "meta/llama-3.1-70b":
+      return { provider: "openrouter", model: "meta-llama/llama-3.1-70b-instruct" };
+    case "mistral/mixtral-8x7b":
+      return { provider: "openrouter", model: "mistralai/mixtral-8x7b-instruct" };
+    case "qwen/qwen2.5-72b":
+      return { provider: "openrouter", model: "qwen/qwen2.5-72b-instruct" };
+    case "deepseek/deepseek-chat":
+      return { provider: "openrouter", model: "deepseek/deepseek-chat" };
+
+    
     case "openrouter/auto":
       return { provider: "openrouter", model: "openrouter/auto" };
+
     default:
-      // fallback: treat unknown as openrouter/auto
+      //fallback to OpenRouter auto
       return { provider: "openrouter", model: "openrouter/auto" };
   }
 }
+
 
 async function askValidatedByPreset(preset, target, request, currentCode, reqForHeaders) {
   const { provider, model } = resolvePreset(preset);
@@ -271,3 +305,4 @@ app.post("/mcai/generate", async (req, res) => {
 app.listen(PORT, () => {
   console.log("MC-AI proxy listening on http://localhost:" + PORT);
 });
+
